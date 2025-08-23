@@ -1,0 +1,406 @@
+'use client';
+
+import { useWriteContractSponsored, useAbstractClient } from '@abstract-foundation/agw-react';
+import { useCallback, useState } from 'react';
+import { type Address, createPublicClient, http } from 'viem';
+import { getGeneralPaymasterInput } from 'viem/zksync';
+import { chain } from '@/config/chain';
+import { useAccount } from 'wagmi';
+
+const KUDOS_CONTRACT_ABI = [
+  {
+    "inputs": [{"name": "_xHandle", "type": "string"}],
+    "name": "registerUser",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "requestAccountDeletion",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "cancelAccountDeletion",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "_user", "type": "address"}],
+    "name": "executeAccountDeletion",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "_isPrivate", "type": "bool"}],
+    "name": "setProfilePrivacy",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {"name": "_toHandle", "type": "string"},
+      {"name": "_tweetUrl", "type": "string"}
+    ],
+    "name": "giveKudos", 
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "_handle", "type": "string"}],
+    "name": "getUserKudos",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "_handle", "type": "string"}],
+    "name": "isHandleAvailable",
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "_user", "type": "address"}],
+    "name": "getAccountStatus",
+    "outputs": [
+      {"name": "isRegistered", "type": "bool"},
+      {"name": "isPendingDeletion", "type": "bool"},
+      {"name": "deletionTime", "type": "uint256"},
+      {"name": "canReregister", "type": "bool"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "_limit", "type": "uint256"}],
+    "name": "getLeaderboard",
+    "outputs": [
+      {"name": "handles", "type": "string[]"},
+      {"name": "kudosReceived", "type": "uint256[]"},
+      {"name": "addresses", "type": "address[]"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "", "type": "address"}],
+    "name": "users",
+    "outputs": [
+      {"name": "xHandle", "type": "string"},
+      {"name": "kudosReceived", "type": "uint256"},
+      {"name": "kudosGiven", "type": "uint256"},
+      {"name": "isRegistered", "type": "bool"},
+      {"name": "registeredAt", "type": "uint256"},
+      {"name": "deletionRequestedAt", "type": "uint256"}
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "", "type": "string"}],
+    "name": "handleToAddress",
+    "outputs": [{"name": "", "type": "address"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{"name": "", "type": "address"}],
+    "name": "privateProfiles",
+    "outputs": [{"name": "", "type": "bool"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "DELETION_GRACE_PERIOD",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "REREGISTRATION_COOLDOWN",
+    "outputs": [{"name": "", "type": "uint256"}],
+    "stateMutability": "view",
+    "type": "function"
+  }
+] as const;
+
+// Abstract testnet paymaster address
+const PAYMASTER_ADDRESS = "0x5407B5040dec3D339A9247f3654E59EEccbb6391" as Address;
+
+export interface UserData {
+  xHandle: string;
+  walletAddress: Address;
+  kudosReceived: number;
+  kudosGiven: number;
+  isRegistered: boolean;
+  registeredAt?: number;
+  deletionRequestedAt?: number;
+  isPrivate?: boolean;
+}
+
+export interface AccountStatus {
+  isRegistered: boolean;
+  isPendingDeletion: boolean;
+  deletionTime: number;
+  canReregister: boolean;
+}
+
+export function useKudos() {
+  const { data: abstractClient } = useAbstractClient();
+  const { address } = useAccount();
+  const { 
+    writeContractSponsoredAsync,
+    data,
+    error,
+    isPending,
+    isSuccess 
+  } = useWriteContractSponsored();
+
+  const [lastAction, setLastAction] = useState<'register' | 'kudos' | 'delete' | 'privacy' | null>(null);
+
+  const checkUserRegistration = useCallback(async (userAddress?: Address): Promise<UserData | null> => {
+    const addressToCheck = userAddress || address;
+    if (!addressToCheck) return null;
+
+    try {
+      const publicClient = createPublicClient({
+        chain: chain,
+        transport: http()
+      });
+
+      const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address;
+
+      // Get user data
+      const result = await publicClient.readContract({
+        address: contractAddress,
+        abi: KUDOS_CONTRACT_ABI,
+        functionName: 'users',
+        args: [addressToCheck]
+      });
+
+      // Get privacy status
+      const isPrivate = await publicClient.readContract({
+        address: contractAddress,
+        abi: KUDOS_CONTRACT_ABI,
+        functionName: 'privateProfiles',
+        args: [addressToCheck]
+      }) as boolean;
+
+      if (result && Array.isArray(result)) {
+        const [xHandle, kudosReceived, kudosGiven, isRegistered, registeredAt, deletionRequestedAt] = result;
+        if (isRegistered) {
+          return {
+            xHandle: xHandle as string,
+            walletAddress: addressToCheck,
+            kudosReceived: Number(kudosReceived),
+            kudosGiven: Number(kudosGiven),
+            isRegistered: isRegistered as boolean,
+            registeredAt: Number(registeredAt),
+            deletionRequestedAt: Number(deletionRequestedAt),
+            isPrivate
+          };
+        }
+      }
+      return null;
+    } catch (error) {
+      console.error('Error checking registration:', error);
+      return null;
+    }
+  }, [address]);
+
+  const getAccountStatus = useCallback(async (userAddress?: Address): Promise<AccountStatus | null> => {
+    const addressToCheck = userAddress || address;
+    if (!addressToCheck) return null;
+
+    try {
+      const publicClient = createPublicClient({
+        chain: chain,
+        transport: http()
+      });
+
+      const result = await publicClient.readContract({
+        address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+        abi: KUDOS_CONTRACT_ABI,
+        functionName: 'getAccountStatus',
+        args: [addressToCheck]
+      });
+
+      if (result && Array.isArray(result)) {
+        const [isRegistered, isPendingDeletion, deletionTime, canReregister] = result;
+        return {
+          isRegistered: isRegistered as boolean,
+          isPendingDeletion: isPendingDeletion as boolean,
+          deletionTime: Number(deletionTime),
+          canReregister: canReregister as boolean
+        };
+      }
+      return null;
+    } catch (error) {
+      console.error('Error checking account status:', error);
+      return null;
+    }
+  }, [address]);
+
+  const checkHandleAvailability = useCallback(async (handle: string): Promise<boolean> => {
+    try {
+      const publicClient = createPublicClient({
+        chain: chain,
+        transport: http()
+      });
+
+      const result = await publicClient.readContract({
+        address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+        abi: KUDOS_CONTRACT_ABI,
+        functionName: 'isHandleAvailable',
+        args: [handle]
+      });
+
+      return result as boolean;
+    } catch (error) {
+      console.error('Error checking handle availability:', error);
+      return false;
+    }
+  }, []);
+
+  const registerUser = useCallback(async (xHandle: string) => {
+    if (!abstractClient) throw new Error('Wallet not connected');
+    
+    setLastAction('register');
+    
+    const tx = await writeContractSponsoredAsync({
+      address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+      abi: KUDOS_CONTRACT_ABI,
+      functionName: 'registerUser',
+      args: [xHandle],
+      paymaster: PAYMASTER_ADDRESS,
+      paymasterInput: getGeneralPaymasterInput({
+        innerInput: '0x',
+      }),
+    });
+    
+    return tx;
+  }, [abstractClient, writeContractSponsoredAsync]);
+
+  const requestAccountDeletion = useCallback(async () => {
+    if (!abstractClient) throw new Error('Wallet not connected');
+    
+    setLastAction('delete');
+    
+    const tx = await writeContractSponsoredAsync({
+      address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+      abi: KUDOS_CONTRACT_ABI,
+      functionName: 'requestAccountDeletion',
+      args: [],
+      paymaster: PAYMASTER_ADDRESS,
+      paymasterInput: getGeneralPaymasterInput({
+        innerInput: '0x',
+      }),
+    });
+    
+    return tx;
+  }, [abstractClient, writeContractSponsoredAsync]);
+
+  const cancelAccountDeletion = useCallback(async () => {
+    if (!abstractClient) throw new Error('Wallet not connected');
+    
+    setLastAction('delete');
+    
+    const tx = await writeContractSponsoredAsync({
+      address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+      abi: KUDOS_CONTRACT_ABI,
+      functionName: 'cancelAccountDeletion',
+      args: [],
+      paymaster: PAYMASTER_ADDRESS,
+      paymasterInput: getGeneralPaymasterInput({
+        innerInput: '0x',
+      }),
+    });
+    
+    return tx;
+  }, [abstractClient, writeContractSponsoredAsync]);
+
+  const executeAccountDeletion = useCallback(async (userAddress: Address) => {
+    if (!abstractClient) throw new Error('Wallet not connected');
+    
+    setLastAction('delete');
+    
+    const tx = await writeContractSponsoredAsync({
+      address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+      abi: KUDOS_CONTRACT_ABI,
+      functionName: 'executeAccountDeletion',
+      args: [userAddress],
+      paymaster: PAYMASTER_ADDRESS,
+      paymasterInput: getGeneralPaymasterInput({
+        innerInput: '0x',
+      }),
+    });
+    
+    return tx;
+  }, [abstractClient, writeContractSponsoredAsync]);
+
+  const setProfilePrivacy = useCallback(async (isPrivate: boolean) => {
+    if (!abstractClient) throw new Error('Wallet not connected');
+    
+    setLastAction('privacy');
+    
+    const tx = await writeContractSponsoredAsync({
+      address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+      abi: KUDOS_CONTRACT_ABI,
+      functionName: 'setProfilePrivacy',
+      args: [isPrivate],
+      paymaster: PAYMASTER_ADDRESS,
+      paymasterInput: getGeneralPaymasterInput({
+        innerInput: '0x',
+      }),
+    });
+    
+    return tx;
+  }, [abstractClient, writeContractSponsoredAsync]);
+
+  const giveKudos = useCallback(async (toHandle: string, tweetUrl: string) => {
+    if (!abstractClient) throw new Error('Wallet not connected');
+    
+    setLastAction('kudos');
+    
+    const tx = await writeContractSponsoredAsync({
+      address: (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0x0000000000000000000000000000000000000000') as Address,
+      abi: KUDOS_CONTRACT_ABI,
+      functionName: 'giveKudos',
+      args: [toHandle, tweetUrl],
+      paymaster: PAYMASTER_ADDRESS,
+      paymasterInput: getGeneralPaymasterInput({
+        innerInput: '0x',
+      }),
+    });
+    
+    return tx;
+  }, [abstractClient, writeContractSponsoredAsync]);
+
+  return {
+    registerUser,
+    giveKudos,
+    requestAccountDeletion,
+    cancelAccountDeletion,
+    executeAccountDeletion,
+    setProfilePrivacy,
+    checkUserRegistration,
+    getAccountStatus,
+    checkHandleAvailability,
+    isConnected: !!abstractClient,
+    isPending,
+    isSuccess,
+    error,
+    data,
+    lastAction,
+  };
+}
