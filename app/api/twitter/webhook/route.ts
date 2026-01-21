@@ -2,30 +2,68 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { chain } from '@/config/chain';
+import { CONTRACT_ADDRESS, ZERO_ADDRESS } from '@/config/contract';
+import { KUDOS_CONTRACT_ABI } from '@/config/abi';
+import crypto from 'crypto';
 
-// Inline ABI for contract functions used by the webhook
-const KUDOS_ABI = [
-  {
-    inputs: [
-      { name: 'recipientHandle', type: 'string' },
-      { name: 'tweetUrl', type: 'string' }
-    ],
-    name: 'giveKudos',
-    outputs: [],
-    stateMutability: 'nonpayable',
-    type: 'function'
-  },
-  {
-    inputs: [{ name: 'handle', type: 'string' }],
-    name: 'handleToAddress',
-    outputs: [{ name: '', type: 'address' }],
-    stateMutability: 'view',
-    type: 'function'
+// SECURITY: Validate private key format before use
+function validatePrivateKey(key: string | undefined): `0x${string}` {
+  if (!key) {
+    throw new Error('WEBHOOK_PRIVATE_KEY environment variable is not configured');
   }
-] as const;
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
-const WEBHOOK_PRIVATE_KEY = process.env.WEBHOOK_PRIVATE_KEY as `0x${string}`;
+  // Must start with 0x
+  if (!key.startsWith('0x')) {
+    throw new Error('WEBHOOK_PRIVATE_KEY must start with 0x prefix');
+  }
+
+  // Must be 66 characters (0x + 64 hex chars for 32 bytes)
+  if (key.length !== 66) {
+    throw new Error('WEBHOOK_PRIVATE_KEY must be 32 bytes (66 characters including 0x prefix)');
+  }
+
+  // Must be valid hexadecimal
+  const hexPart = key.slice(2);
+  if (!/^[0-9a-fA-F]+$/.test(hexPart)) {
+    throw new Error('WEBHOOK_PRIVATE_KEY contains invalid hexadecimal characters');
+  }
+
+  return key as `0x${string}`;
+}
+
+// SECURITY: Verify Twitter webhook signature using HMAC-SHA256
+function verifyTwitterSignature(
+  payload: string,
+  signature: string | null,
+  consumerSecret: string
+): boolean {
+  if (!signature) {
+    return false;
+  }
+
+  // Twitter signature format: sha256=<base64-encoded-hmac>
+  if (!signature.startsWith('sha256=')) {
+    return false;
+  }
+
+  const providedSignature = signature.slice(7); // Remove 'sha256=' prefix
+
+  const expectedSignature = crypto
+    .createHmac('sha256', consumerSecret)
+    .update(payload)
+    .digest('base64');
+
+  // Use timing-safe comparison to prevent timing attacks
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(providedSignature, 'base64'),
+      Buffer.from(expectedSignature, 'base64')
+    );
+  } catch {
+    // Buffer lengths don't match or invalid base64
+    return false;
+  }
+}
 
 interface TwitterWebhookPayload {
   tweet_create_events?: Array<{
@@ -58,27 +96,57 @@ function parseKudosFromTweet(text: string): { giver: string; recipient: string }
 
 export async function POST(request: NextRequest) {
   try {
-    const payload: TwitterWebhookPayload = await request.json();
-    
+    // SECURITY: Get raw body for signature verification before parsing
+    const rawBody = await request.text();
+
+    // SECURITY: Verify Twitter webhook signature
+    const twitterSignature = request.headers.get('X-Twitter-Webhooks-Signature');
+    const webhookSecret = process.env.TWITTER_WEBHOOK_SECRET;
+
+    if (!webhookSecret) {
+      console.error('TWITTER_WEBHOOK_SECRET is not configured');
+      return NextResponse.json(
+        { error: 'Webhook not properly configured' },
+        { status: 500 }
+      );
+    }
+
+    if (!verifyTwitterSignature(rawBody, twitterSignature, webhookSecret)) {
+      console.error('Invalid Twitter webhook signature');
+      return NextResponse.json(
+        { error: 'Invalid signature' },
+        { status: 401 }
+      );
+    }
+
+    // SECURITY: Validate private key format before any processing
+    let validatedPrivateKey: `0x${string}`;
+    try {
+      validatedPrivateKey = validatePrivateKey(process.env.WEBHOOK_PRIVATE_KEY);
+    } catch (error) {
+      console.error('Private key validation failed:', error instanceof Error ? error.message : 'Unknown error');
+      return NextResponse.json(
+        { error: 'Webhook not properly configured' },
+        { status: 500 }
+      );
+    }
+
+    const payload: TwitterWebhookPayload = JSON.parse(rawBody);
+
     if (!payload.tweet_create_events || payload.tweet_create_events.length === 0) {
       return NextResponse.json({ status: 'ignored', reason: 'no tweet events' });
     }
 
     const processedTweets = [];
-    
+
     for (const tweet of payload.tweet_create_events) {
       const kudos = parseKudosFromTweet(tweet.text);
-      
+
       if (kudos) {
         kudos.giver = tweet.user.screen_name;
-        
-        try {
-          if (!WEBHOOK_PRIVATE_KEY) {
-            console.error('Webhook private key not configured');
-            continue;
-          }
 
-          const account = privateKeyToAccount(WEBHOOK_PRIVATE_KEY);
+        try {
+          const account = privateKeyToAccount(validatedPrivateKey);
           
           const walletClient = createWalletClient({
             account,

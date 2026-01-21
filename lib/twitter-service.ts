@@ -138,4 +138,21 @@ export class TwitterService {
   }
 }
 
-export const twitterService = new TwitterService(process.env.NEXT_PUBLIC_TWITTER_BEARER_TOKEN);
+// SECURITY: Twitter Bearer Token must never be exposed client-side
+// This service should ONLY be instantiated in server-side code (API routes, server components)
+// Use: new TwitterService(process.env.TWITTER_BEARER_TOKEN) in server-side code only
+export function createTwitterService(): TwitterService {
+  if (typeof window !== 'undefined') {
+    throw new Error(
+      'TwitterService cannot be instantiated on the client side. ' +
+      'Twitter API calls must be made from server-side code only.'
+    );
+  }
+
+  const bearerToken = process.env.TWITTER_BEARER_TOKEN;
+  if (!bearerToken) {
+    throw new Error('TWITTER_BEARER_TOKEN environment variable is not configured');
+  }
+
+  return new TwitterService(bearerToken);
+}
