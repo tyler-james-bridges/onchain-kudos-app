@@ -1,40 +1,86 @@
-# Onchain Kudos App
+# Onchain Kudos
 
-A blockchain-based kudos tracking application that allows users to register X/Twitter handles and give kudos to other users with permanent onchain records using Abstract Global Wallet (AGW).
+**Give props to your frens, forever on the blockchain.**
 
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+Onchain Kudos lets you send permanent, verifiable shoutouts to people on X (Twitter). When you give someone kudos, it gets recorded on the blockchain - meaning it's there forever, can't be deleted, and proves you really said it.
+
+Think of it like a permanent "thank you" or "you're awesome" that lives onchain.
+
+## How It Works
+
+1. **Connect your wallet** - Uses [Abstract Global Wallet](https://abs.xyz) so you don't need to deal with seed phrases or browser extensions
+2. **Register your X handle** - Link your Twitter/X username to your wallet address
+3. **Give kudos** - Shout someone out on X and record it onchain
+
+### The ++ Syntax
+
+The easiest way to give kudos is tweeting with this format:
+
+```
+@username ++ great thread on MEV!
+```
+
+That's it. The `++` tells our system to record this as kudos. The person you're shouting out gets credit on the leaderboard.
+
+## What You Get
+
+- **Leaderboard** - See who's getting the most love from the community
+- **Permanent record** - Your kudos live forever onchain
+- **Profile stats** - Track kudos you've given and received
+- **Verifiable** - Anyone can check the blockchain to verify kudos are real
 
 ## Getting Started
 
-First, run the development server:
+### Just Want to Use It?
+
+1. Visit the app
+2. Click "Connect Wallet" (Abstract handles all the wallet stuff for you)
+3. Enter your X handle and register
+4. Start giving kudos!
+
+### Running Locally (for devs)
 
 ```bash
+# Clone and install
+git clone https://github.com/tyler-james-bridges/onchain-kudos-app.git
+cd onchain-kudos-app
+npm install
+
+# Set up environment
+cp .env.example .env.local
+# Add your API keys (Twitter API, contract address, etc.)
+
+# Run it
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) and you're good.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## FAQ
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Do I need ETH to use this?**
+Nope. It runs on Abstract (an L2), and the Abstract Global Wallet handles gas for you.
 
-## Learn More
+**Is my X handle tied to my wallet forever?**
+You can delete your account in settings. There's a 7-day waiting period, then it's gone.
 
-To learn more about Next.js, take a look at the following resources:
+**Can I make my profile private?**
+Yes, check the settings tab after you register.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+**What's the point?**
+Build your onchain reputation. Show appreciation that actually means something because it's permanent and verifiable. Plus, leaderboard clout.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Tech Stack
 
-## Deploy on Vercel
+- **Frontend**: Next.js 15, React 19, Tailwind CSS
+- **Blockchain**: Abstract L2 with Abstract Global Wallet
+- **Smart Contract**: Solidity (Hardhat for development)
+- **APIs**: Twitter API v2 for webhook integration
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Contributing
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+PRs welcome. Please open an issue first for major changes.
+
+## License
+
+MIT
