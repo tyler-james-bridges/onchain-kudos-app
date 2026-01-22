@@ -17,6 +17,13 @@ import { parseContractError } from '@/lib/errorUtils';
 import { AlertTriangle, Lock, Clock } from 'lucide-react';
 import type { KudosEntry, UserProfile } from '@/lib/types';
 import { isContractDeployed } from '@/config/contract';
+import {
+  isValidHandle,
+  isValidTweetUrl,
+  HANDLE_REGEX,
+  MIN_HANDLE_LENGTH,
+  MAX_HANDLE_LENGTH,
+} from '@/lib/validation';
 
 // Debounce delay for handle availability check (in milliseconds)
 const DEBOUNCE_DELAY = 300;
@@ -241,17 +248,17 @@ export default function KudosApp() {
     }
 
     // Enhanced validation for new contract
-    if (xHandle.length < 3) {
-      toast.error('Handle must be at least 3 characters long');
+    if (xHandle.length < MIN_HANDLE_LENGTH) {
+      toast.error(`Handle must be at least ${MIN_HANDLE_LENGTH} characters long`);
       return;
     }
 
-    if (xHandle.length > 15) {
-      toast.error('Handle must be 15 characters or less');
+    if (xHandle.length > MAX_HANDLE_LENGTH) {
+      toast.error(`Handle must be ${MAX_HANDLE_LENGTH} characters or less`);
       return;
     }
 
-    if (!/^[a-zA-Z0-9_]+$/.test(xHandle)) {
+    if (!HANDLE_REGEX.test(xHandle)) {
       toast.error('Handle can only contain letters, numbers, and underscores');
       return;
     }
@@ -288,13 +295,13 @@ export default function KudosApp() {
     }
 
     // Validate recipient handle
-    if (!/^[a-zA-Z0-9_]+$/.test(kudosRecipient)) {
+    if (!HANDLE_REGEX.test(kudosRecipient)) {
       toast.error('Recipient handle can only contain letters, numbers, and underscores');
       return;
     }
 
     // Validate tweet URL
-    if (!kudosTweetUrl.includes('x.com/') && !kudosTweetUrl.includes('twitter.com/')) {
+    if (!isValidTweetUrl(kudosTweetUrl)) {
       toast.error('Please enter a valid X (Twitter) URL');
       return;
     }
@@ -351,7 +358,7 @@ export default function KudosApp() {
     setHandleAvailable(null);
 
     // Check availability with debounce
-    if (handle.length >= 3 && /^[a-zA-Z0-9_]+$/.test(handle)) {
+    if (isValidHandle(handle)) {
       setCheckingHandle(true);
       debounceTimerRef.current = setTimeout(async () => {
         try {
