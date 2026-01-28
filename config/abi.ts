@@ -9,59 +9,59 @@ export const KUDOS_CONTRACT_ABI = [
     name: 'registerUser',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [],
     name: 'requestAccountDeletion',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [],
     name: 'cancelAccountDeletion',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '_user', type: 'address' }],
     name: 'executeAccountDeletion',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [],
     name: 'deleteAccountImmediately',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '_isPrivate', type: 'bool' }],
     name: 'setProfilePrivacy',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [
       { name: '_toHandle', type: 'string' },
-      { name: '_tweetUrl', type: 'string' }
+      { name: '_tweetUrl', type: 'string' },
     ],
     name: 'giveKudos',
     outputs: [],
     stateMutability: 'nonpayable',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '_handle', type: 'string' }],
     name: 'isHandleAvailable',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '_user', type: 'address' }],
@@ -70,10 +70,10 @@ export const KUDOS_CONTRACT_ABI = [
       { name: 'isRegistered', type: 'bool' },
       { name: 'isPendingDeletion', type: 'bool' },
       { name: 'deletionTime', type: 'uint256' },
-      { name: 'canReregister', type: 'bool' }
+      { name: 'canReregister', type: 'bool' },
     ],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '_limit', type: 'uint256' }],
@@ -81,10 +81,10 @@ export const KUDOS_CONTRACT_ABI = [
     outputs: [
       { name: 'handles', type: 'string[]' },
       { name: 'kudosReceived', type: 'uint256[]' },
-      { name: 'addresses', type: 'address[]' }
+      { name: 'addresses', type: 'address[]' },
     ],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '', type: 'address' }],
@@ -95,29 +95,29 @@ export const KUDOS_CONTRACT_ABI = [
       { name: 'kudosGiven', type: 'uint256' },
       { name: 'isRegistered', type: 'bool' },
       { name: 'registeredAt', type: 'uint256' },
-      { name: 'deletionRequestedAt', type: 'uint256' }
+      { name: 'deletionRequestedAt', type: 'uint256' },
     ],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '', type: 'string' }],
     name: 'handleToAddress',
     outputs: [{ name: '', type: 'address' }],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [{ name: '', type: 'address' }],
     name: 'privateProfiles',
     outputs: [{ name: '', type: 'bool' }],
     stateMutability: 'view',
-    type: 'function'
+    type: 'function',
   },
   {
     inputs: [
       { name: '_offset', type: 'uint256' },
-      { name: '_limit', type: 'uint256' }
+      { name: '_limit', type: 'uint256' },
     ],
     name: 'getKudosHistoryPage',
     outputs: [
@@ -128,13 +128,13 @@ export const KUDOS_CONTRACT_ABI = [
           { name: 'fromHandle', type: 'string' },
           { name: 'toHandle', type: 'string' },
           { name: 'timestamp', type: 'uint256' },
-          { name: 'tweetUrl', type: 'string' }
+          { name: 'tweetUrl', type: 'string' },
         ],
         name: '',
-        type: 'tuple[]'
-      }
+        type: 'tuple[]',
+      },
     ],
     stateMutability: 'view',
-    type: 'function'
-  }
+    type: 'function',
+  },
 ] as const;

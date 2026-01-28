@@ -18,21 +18,26 @@ export class TwitterService {
     }
   }
 
-  parseKudosFromText(text: string): { recipient: string; isValid: boolean } | null {
+  parseKudosFromText(
+    text: string
+  ): { recipient: string; isValid: boolean } | null {
     const kudosPattern = /@(\w+)\s*\+\+/g;
     const match = kudosPattern.exec(text);
 
     if (match && match[1]) {
       return {
         recipient: match[1],
-        isValid: true
+        isValid: true,
       };
     }
 
     return null;
   }
 
-  async searchKudosTweets(username: string, sinceId?: string): Promise<KudosTweet[]> {
+  async searchKudosTweets(
+    username: string,
+    sinceId?: string
+  ): Promise<KudosTweet[]> {
     if (!this.client) {
       throw new Error('Twitter client not initialized');
     }
@@ -44,7 +49,7 @@ export class TwitterService {
         'user.fields': ['username'],
         expansions: ['author_id', 'entities.mentions.username'],
         max_results: 100,
-        since_id: sinceId
+        since_id: sinceId,
       });
 
       const kudosTweets: KudosTweet[] = [];
@@ -52,15 +57,18 @@ export class TwitterService {
       for (const tweet of tweets.data.data || []) {
         const kudos = this.parseKudosFromText(tweet.text);
         if (kudos && kudos.recipient.toLowerCase() === username.toLowerCase()) {
-          const author = tweets.includes?.users?.find(u => u.id === tweet.author_id);
+          const author = tweets.includes?.users?.find(
+            (u) => u.id === tweet.author_id
+          );
 
           kudosTweets.push({
             id: tweet.id,
             text: tweet.text,
             authorUsername: author?.username || 'unknown',
             createdAt: new Date(tweet.created_at || Date.now()),
-            mentionedUsers: tweet.entities?.mentions?.map(m => m.username) || [],
-            url: `https://twitter.com/${author?.username}/status/${tweet.id}`
+            mentionedUsers:
+              tweet.entities?.mentions?.map((m) => m.username) || [],
+            url: `https://twitter.com/${author?.username}/status/${tweet.id}`,
           });
         }
       }

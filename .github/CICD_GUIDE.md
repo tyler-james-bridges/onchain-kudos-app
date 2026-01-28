@@ -33,6 +33,7 @@ The repository uses GitHub Actions for automated testing, security scanning, and
   - Results are uploaded as artifacts for review
 
 **Features:**
+
 - Uses npm cache for faster dependency installation
 - Concurrent job execution for speed
 - Comprehensive failure reporting
@@ -67,6 +68,7 @@ The repository uses GitHub Actions for automated testing, security scanning, and
   - Essential for preventing credential leaks
 
 **Features:**
+
 - Runs on schedule for proactive vulnerability detection
 - Multiple complementary security tools
 - Results integrated into GitHub Security tab
@@ -90,6 +92,7 @@ The repository uses GitHub Actions for automated testing, security scanning, and
    - Only runs if version number changed
 
 **Workflow:**
+
 ```
 Push to main with package.json changes
          ↓
@@ -103,6 +106,7 @@ Create GitHub Release
 ```
 
 **Features:**
+
 - Only triggers on package.json changes (excludes chore commits)
 - Validates code quality before release
 - Automatically generates release notes
@@ -118,11 +122,13 @@ Simply open a pull request against `main` or `develop` branch. The CI workflow w
 ### Trigger Security Scan
 
 Security scans run automatically on:
+
 - Every pull request
 - Every push to main/develop
 - Weekly on Sundays at 2 AM UTC
 
 To trigger manually:
+
 ```bash
 gh workflow run security.yml
 ```
@@ -137,6 +143,7 @@ gh workflow run security.yml
    - GitHub Release with auto-generated notes
 
 Example:
+
 ```bash
 # Update version
 npm version patch --no-git-tag-version
@@ -167,6 +174,7 @@ with:
 ```
 
 This:
+
 - Automatically caches `node_modules` based on `package-lock.json`
 - Dramatically reduces dependency installation time
 - Cache is invalidated when `package-lock.json` changes
@@ -186,6 +194,7 @@ This:
 **Issue**: CI workflow fails with build error
 
 **Solutions**:
+
 1. Check error message in workflow logs
 2. Run locally: `npm install && npm run build`
 3. Verify all dependencies are correct
@@ -196,6 +205,7 @@ This:
 **Issue**: Dependency or CodeQL scan blocks merging
 
 **Solutions**:
+
 1. For npm audit failures: `npm audit fix` or manually update packages
 2. For CodeQL issues: review security findings and fix code
 3. For false positives: can be dismissed in Security tab (requires admin)
@@ -205,6 +215,7 @@ This:
 **Issue**: Push to main doesn't trigger release
 
 **Solutions**:
+
 1. Verify `package.json` was modified in the commit
 2. Check that version number actually changed
 3. Verify release workflow isn't in draft state
@@ -215,6 +226,7 @@ This:
 **Issue**: Workflow fails with permission errors
 
 **Solution**: Ensure GitHub token has required scopes:
+
 ```bash
 gh auth refresh -s workflow
 ```
@@ -233,6 +245,7 @@ The CI/CD pipeline should be regularly reviewed and improved:
 ## Performance Metrics
 
 Current pipeline performance targets:
+
 - **Lint**: < 30 seconds
 - **Type Check**: < 30 seconds
 - **Build**: < 2 minutes

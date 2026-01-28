@@ -1,12 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Twitter, CheckCircle, AlertCircle, Loader2, Plus, Send, Search } from 'lucide-react';
+import {
+  Twitter,
+  CheckCircle,
+  AlertCircle,
+  Loader2,
+  Plus,
+  Send,
+  Search,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { useKudos } from '@/lib/useKudos';
 import type { SimulatedTweet, FoundTweet } from '@/lib/types';
@@ -15,7 +29,9 @@ interface TwitterIntegrationProps {
   registeredHandle?: string;
 }
 
-export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps) {
+export function TwitterIntegration({
+  registeredHandle,
+}: TwitterIntegrationProps) {
   const [isConnected, setIsConnected] = useState(false);
   const [twitterHandle, setTwitterHandle] = useState(registeredHandle || '');
   const [recipientHandle, setRecipientHandle] = useState('');
@@ -35,7 +51,9 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
   }, [registeredHandle]);
 
   const connectTwitter = () => {
-    toast.info('X OAuth integration would redirect to Twitter for authentication');
+    toast.info(
+      'X OAuth integration would redirect to Twitter for authentication'
+    );
     setIsConnected(true);
     setTwitterHandle('testuser');
   };
@@ -52,7 +70,9 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
 
     // Check for self-kudos
     if (recipientHandle.toLowerCase() === twitterHandle.toLowerCase()) {
-      toast.error('You cannot give kudos to yourself! Please enter a different recipient.');
+      toast.error(
+        'You cannot give kudos to yourself! Please enter a different recipient.'
+      );
       return;
     }
 
@@ -62,10 +82,10 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
       text: `@${recipientHandle} ++ for being awesome!`,
       author: twitterHandle,
       timestamp: new Date(),
-      processed: false
+      processed: false,
     };
 
-    setSimulatedTweets(prev => [tweet, ...prev]);
+    setSimulatedTweets((prev) => [tweet, ...prev]);
     setTweetText(`@${recipientHandle} ++ for being awesome!`);
     toast.success('Tweet simulated! Now process it to give kudos.');
   };
@@ -85,17 +105,21 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
       // Execute real transaction
       await giveKudos(recipient, tweetUrl);
 
-      setSimulatedTweets(prev =>
-        prev.map(t => t.id === tweet.id ? { ...t, processed: true } : t)
+      setSimulatedTweets((prev) =>
+        prev.map((t) => (t.id === tweet.id ? { ...t, processed: true } : t))
       );
 
       toast.success(`Kudos given to @${recipient}!`);
     } catch (error: unknown) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to process kudos';
+      const errorMsg =
+        error instanceof Error ? error.message : 'Failed to process kudos';
       if (errorMsg.includes('Recipient not registered')) {
-        toast.error(`@${recipient} is not registered. They need to register before receiving kudos.`, {
-          duration: 5000
-        });
+        toast.error(
+          `@${recipient} is not registered. They need to register before receiving kudos.`,
+          {
+            duration: 5000,
+          }
+        );
       } else {
         toast.error(errorMsg);
       }
@@ -112,7 +136,9 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
 
     setIsProcessing(true);
     try {
-      const response = await fetch(`/api/twitter/process-kudos?username=${searchHandle}`);
+      const response = await fetch(
+        `/api/twitter/process-kudos?username=${searchHandle}`
+      );
       const data = await response.json();
 
       if (response.ok) {
@@ -143,8 +169,8 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
         body: JSON.stringify({
           tweetUrl,
           giverHandle: match[1],
-          recipientHandle: recipientHandle
-        })
+          recipientHandle: recipientHandle,
+        }),
       });
 
       const data = await response.json();
@@ -166,8 +192,7 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
-          <Twitter className="h-5 w-5" />
-          X (Twitter) Integration
+          <Twitter className="h-5 w-5" />X (Twitter) Integration
         </CardTitle>
         <CardDescription>
           Give kudos directly from X by tweeting &quot;@username ++&quot;
@@ -186,9 +211,15 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
               <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
                 <h3 className="font-semibold mb-2">How Testing Works:</h3>
                 <ol className="list-decimal list-inside space-y-1 text-sm">
-                  <li>You&apos;re connected as <strong>@{twitterHandle}</strong></li>
-                  <li>Enter a recipient handle who is registered on the platform</li>
-                  <li>Create a test tweet with the &quot;@username ++&quot; format</li>
+                  <li>
+                    You&apos;re connected as <strong>@{twitterHandle}</strong>
+                  </li>
+                  <li>
+                    Enter a recipient handle who is registered on the platform
+                  </li>
+                  <li>
+                    Create a test tweet with the &quot;@username ++&quot; format
+                  </li>
                   <li>Process the simulated tweet to give kudos on-chain</li>
                   <li>Check the leaderboard to see the results!</li>
                 </ol>
@@ -212,7 +243,9 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
               ) : (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between p-3 bg-green-50 dark:bg-green-950 rounded-lg">
-                    <span className="text-sm">Connected as @{twitterHandle}</span>
+                    <span className="text-sm">
+                      Connected as @{twitterHandle}
+                    </span>
                     <Badge variant="secondary">
                       <CheckCircle className="mr-1 h-3 w-3" />
                       Connected
@@ -220,7 +253,9 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
                   </div>
 
                   <div className="space-y-2">
-                    <label className="text-sm font-medium">Give Kudos To:</label>
+                    <label className="text-sm font-medium">
+                      Give Kudos To:
+                    </label>
                     <Input
                       placeholder="Recipient X handle (e.g., vitalikbuterin)"
                       value={recipientHandle}
@@ -298,8 +333,9 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
                   <div className="space-y-1">
                     <p className="font-semibold">Real Tweet Processing</p>
                     <p className="text-sm">
-                      Paste a real X/Twitter URL that contains &quot;@username ++&quot; to process kudos.
-                      Note: Requires Twitter API access to verify tweets.
+                      Paste a real X/Twitter URL that contains &quot;@username
+                      ++&quot; to process kudos. Note: Requires Twitter API
+                      access to verify tweets.
                     </p>
                   </div>
                 </div>
@@ -345,8 +381,8 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
               <div className="p-4 bg-purple-50 dark:bg-purple-950 rounded-lg">
                 <h3 className="font-semibold mb-2">Kudos Monitoring</h3>
                 <p className="text-sm">
-                  Search for kudos tweets mentioning a specific user.
-                  This would normally run automatically via webhooks.
+                  Search for kudos tweets mentioning a specific user. This would
+                  normally run automatically via webhooks.
                 </p>
               </div>
 
@@ -356,10 +392,7 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
                   value={searchHandle}
                   onChange={(e) => setSearchHandle(e.target.value)}
                 />
-                <Button
-                  onClick={searchForKudos}
-                  disabled={isProcessing}
-                >
+                <Button onClick={searchForKudos} disabled={isProcessing}>
                   {isProcessing ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
@@ -373,7 +406,9 @@ export function TwitterIntegration({ registeredHandle }: TwitterIntegrationProps
                   <h3 className="font-semibold">Found Kudos Tweets:</h3>
                   {foundTweets.map((tweet) => (
                     <div key={tweet.id} className="p-3 border rounded-lg">
-                      <p className="text-sm font-medium">@{tweet.authorUsername}</p>
+                      <p className="text-sm font-medium">
+                        @{tweet.authorUsername}
+                      </p>
                       <p className="text-sm">{tweet.text}</p>
                       <a
                         href={tweet.url}
