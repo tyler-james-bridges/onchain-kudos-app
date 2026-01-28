@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+.next/
+out/
+build/
+dist/
+
+# Hardhat
+artifacts/
+cache/
+typechain-types/
+
+# Generated
+*.min.js
+package-lock.json
+
+# Misc
+.vercel/
+.env*
