@@ -3,8 +3,19 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLoginWithAbstract } from '@abstract-foundation/agw-react';
 import { useAccount } from 'wagmi';
-import { useKudos, type UserData, type KudosTransaction, type LeaderboardEntry } from '@/lib/useKudos';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  useKudos,
+  type UserData,
+  type KudosTransaction,
+  type LeaderboardEntry,
+} from '@/lib/useKudos';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -39,7 +50,7 @@ export default function KudosApp() {
     getLeaderboardData,
     isPending,
     isSuccess,
-    error
+    error,
   } = useKudos();
 
   const [xHandle, setXHandle] = useState('');
@@ -50,7 +61,10 @@ export default function KudosApp() {
   const [kudosRecipient, setKudosRecipient] = useState('');
   const [kudosTweetUrl, setKudosTweetUrl] = useState('');
   const [registeredHandle, setRegisteredHandle] = useState<string>('');
-  const [kudosStats, setKudosStats] = useState<{ received: number; given: number }>({ received: 0, given: 0 });
+  const [kudosStats, setKudosStats] = useState<{
+    received: number;
+    given: number;
+  }>({ received: 0, given: 0 });
   const [userData, setUserData] = useState<UserData | null>(null);
   const [handleAvailable, setHandleAvailable] = useState<boolean | null>(null);
   const [checkingHandle, setCheckingHandle] = useState(false);
@@ -67,7 +81,7 @@ export default function KudosApp() {
         toHandle: 'bob_builder',
         tweetUrl: 'https://x.com/alice_dev/status/123',
         timestamp: Date.now() - 3600000,
-        message: 'Great work on the API!'
+        message: 'Great work on the API!',
       },
       {
         id: '2',
@@ -75,7 +89,7 @@ export default function KudosApp() {
         toHandle: 'alice_dev',
         tweetUrl: 'https://x.com/charlie_coder/status/456',
         timestamp: Date.now() - 7200000,
-        message: 'Thanks for the help debugging!'
+        message: 'Thanks for the help debugging!',
       },
       {
         id: '3',
@@ -83,8 +97,8 @@ export default function KudosApp() {
         toHandle: 'dana_designer',
         tweetUrl: 'https://x.com/bob_builder/status/789',
         timestamp: Date.now() - 10800000,
-        message: 'Amazing UI design!'
-      }
+        message: 'Amazing UI design!',
+      },
     ];
 
     const mockLeaderboard: UserProfile[] = [
@@ -92,7 +106,7 @@ export default function KudosApp() {
       { handle: 'bob_builder', kudosReceived: 35, kudosGiven: 40 },
       { handle: 'charlie_coder', kudosReceived: 28, kudosGiven: 25 },
       { handle: 'dana_designer', kudosReceived: 25, kudosGiven: 22 },
-      { handle: 'eve_engineer', kudosReceived: 20, kudosGiven: 18 }
+      { handle: 'eve_engineer', kudosReceived: 20, kudosGiven: 18 },
     ];
 
     setRecentKudos(mockKudos);
@@ -112,18 +126,20 @@ export default function KudosApp() {
       // Fetch real blockchain data
       const [historyData, leaderboardData] = await Promise.all([
         getKudosHistory(0, 10),
-        getLeaderboardData(10)
+        getLeaderboardData(10),
       ]);
 
       // Transform kudos history to KudosEntry format
       if (historyData.length > 0) {
-        const transformedKudos: KudosEntry[] = historyData.map((tx: KudosTransaction, index: number) => ({
-          id: `${tx.timestamp}-${index}`,
-          fromHandle: tx.fromHandle,
-          toHandle: tx.toHandle,
-          tweetUrl: tx.tweetUrl,
-          timestamp: tx.timestamp * 1000, // Convert seconds to milliseconds
-        }));
+        const transformedKudos: KudosEntry[] = historyData.map(
+          (tx: KudosTransaction, index: number) => ({
+            id: `${tx.timestamp}-${index}`,
+            fromHandle: tx.fromHandle,
+            toHandle: tx.toHandle,
+            tweetUrl: tx.tweetUrl,
+            timestamp: tx.timestamp * 1000, // Convert seconds to milliseconds
+          })
+        );
         setRecentKudos(transformedKudos);
       } else {
         setRecentKudos([]);
@@ -131,12 +147,14 @@ export default function KudosApp() {
 
       // Transform leaderboard data to UserProfile format
       if (leaderboardData.length > 0) {
-        const transformedLeaderboard: UserProfile[] = leaderboardData.map((entry: LeaderboardEntry) => ({
-          handle: entry.handle,
-          kudosReceived: entry.kudosReceived,
-          kudosGiven: 0, // Not available from leaderboard call
-          walletAddress: entry.address
-        }));
+        const transformedLeaderboard: UserProfile[] = leaderboardData.map(
+          (entry: LeaderboardEntry) => ({
+            handle: entry.handle,
+            kudosReceived: entry.kudosReceived,
+            kudosGiven: 0, // Not available from leaderboard call
+            walletAddress: entry.address,
+          })
+        );
         setLeaderboard(transformedLeaderboard);
       } else {
         setLeaderboard([]);
@@ -160,15 +178,17 @@ export default function KudosApp() {
         setXHandle(registration.xHandle);
         setKudosStats({
           received: registration.kudosReceived,
-          given: registration.kudosGiven
+          given: registration.kudosGiven,
         });
         setUserProfile({
           handle: registration.xHandle,
           kudosReceived: registration.kudosReceived,
-          kudosGiven: registration.kudosGiven
+          kudosGiven: registration.kudosGiven,
         });
 
-        toast.success(`Welcome back @${registration.xHandle}! You have ${registration.kudosReceived} kudos received and ${registration.kudosGiven} kudos given.`);
+        toast.success(
+          `Welcome back @${registration.xHandle}! You have ${registration.kudosReceived} kudos received and ${registration.kudosGiven} kudos given.`
+        );
       } else {
         // Reset state if user is no longer registered (e.g., after deletion)
         setUserData(null);
@@ -247,7 +267,9 @@ export default function KudosApp() {
 
     // Enhanced validation for new contract
     if (xHandle.length < MIN_HANDLE_LENGTH) {
-      toast.error(`Handle must be at least ${MIN_HANDLE_LENGTH} characters long`);
+      toast.error(
+        `Handle must be at least ${MIN_HANDLE_LENGTH} characters long`
+      );
       return;
     }
 
@@ -275,10 +297,12 @@ export default function KudosApp() {
       setUserProfile({
         handle: xHandle,
         kudosReceived: 0,
-        kudosGiven: 0
+        kudosGiven: 0,
       });
       setKudosStats({ received: 0, given: 0 });
-      toast.success(`Successfully registered as @${xHandle}! You can now give and receive kudos.`);
+      toast.success(
+        `Successfully registered as @${xHandle}! You can now give and receive kudos.`
+      );
     } catch (error: unknown) {
       const errorMessage = parseContractError(error);
       toast.error(errorMessage);
@@ -294,7 +318,9 @@ export default function KudosApp() {
 
     // Validate recipient handle
     if (!HANDLE_REGEX.test(kudosRecipient)) {
-      toast.error('Recipient handle can only contain letters, numbers, and underscores');
+      toast.error(
+        'Recipient handle can only contain letters, numbers, and underscores'
+      );
       return;
     }
 
@@ -306,7 +332,9 @@ export default function KudosApp() {
 
     // Check if trying to give kudos to themselves
     if (kudosRecipient.toLowerCase() === xHandle.toLowerCase()) {
-      toast.error('You cannot give kudos to yourself. Please select a different recipient.');
+      toast.error(
+        'You cannot give kudos to yourself. Please select a different recipient.'
+      );
       return;
     }
 
@@ -319,14 +347,16 @@ export default function KudosApp() {
         toHandle: kudosRecipient,
         tweetUrl: kudosTweetUrl,
         timestamp: Date.now(),
-        message: 'Kudos sent!'
+        message: 'Kudos sent!',
       };
 
       setRecentKudos([newKudos, ...recentKudos]);
       setKudosRecipient('');
       setKudosTweetUrl('');
 
-      toast.success(`Kudos successfully sent to @${kudosRecipient}! This recognition is now permanently recorded on the blockchain.`);
+      toast.success(
+        `Kudos successfully sent to @${kudosRecipient}! This recognition is now permanently recorded on the blockchain.`
+      );
     } catch (error: unknown) {
       const errorMessage = parseContractError(error);
       toast.error(errorMessage);
@@ -383,22 +413,29 @@ export default function KudosApp() {
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className="text-3xl">Kudos Tracker</CardTitle>
-                <CardDescription>Give kudos to your friends on X with blockchain verification</CardDescription>
+                <CardDescription>
+                  Give kudos to your friends on X with blockchain verification
+                </CardDescription>
               </div>
               {isConnected ? (
                 <div className="flex items-center gap-4">
                   {isRegistered && (
                     <div className="text-right">
-                      <p className="text-sm font-medium">@{registeredHandle || xHandle}</p>
+                      <p className="text-sm font-medium">
+                        @{registeredHandle || xHandle}
+                      </p>
                       {(kudosStats.received > 0 || kudosStats.given > 0) && (
                         <p className="text-xs text-muted-foreground">
-                          {kudosStats.received} received · {kudosStats.given} given
+                          {kudosStats.received} received · {kudosStats.given}{' '}
+                          given
                         </p>
                       )}
                     </div>
                   )}
                   <Badge variant="secondary" className="px-3 py-1">
-                    {isRegistered ? `@${registeredHandle || xHandle}` : 'Not Registered'}
+                    {isRegistered
+                      ? `@${registeredHandle || xHandle}`
+                      : 'Not Registered'}
                   </Badge>
                   <Button onClick={handleDisconnect} variant="outline">
                     Disconnect
@@ -418,7 +455,9 @@ export default function KudosApp() {
           <Card>
             <CardHeader>
               <CardTitle>Register Your X Handle</CardTitle>
-              <CardDescription>Link your X account to start giving and receiving kudos</CardDescription>
+              <CardDescription>
+                Link your X account to start giving and receiving kudos
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="flex gap-4">
@@ -430,13 +469,21 @@ export default function KudosApp() {
                     maxLength={15}
                   />
                   {checkingHandle && (
-                    <p className="text-xs text-muted-foreground">Checking availability...</p>
-                  )}
-                  {xHandle.length >= 3 && handleAvailable !== null && !checkingHandle && (
-                    <p className={`text-xs ${handleAvailable ? 'text-green-600' : 'text-red-600'}`}>
-                      {handleAvailable ? 'Handle available' : 'Handle not available'}
+                    <p className="text-xs text-muted-foreground">
+                      Checking availability...
                     </p>
                   )}
+                  {xHandle.length >= 3 &&
+                    handleAvailable !== null &&
+                    !checkingHandle && (
+                      <p
+                        className={`text-xs ${handleAvailable ? 'text-green-600' : 'text-red-600'}`}
+                      >
+                        {handleAvailable
+                          ? 'Handle available'
+                          : 'Handle not available'}
+                      </p>
+                    )}
                 </div>
                 <Button onClick={handleRegister} disabled={isPending}>
                   {isPending ? 'Registering...' : 'Register'}
@@ -456,7 +503,9 @@ export default function KudosApp() {
           <Card>
             <CardHeader>
               <CardTitle>Manual Kudos Entry</CardTitle>
-              <CardDescription>Or directly send kudos with a tweet URL</CardDescription>
+              <CardDescription>
+                Or directly send kudos with a tweet URL
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
@@ -479,7 +528,8 @@ export default function KudosApp() {
                   </Button>
                 </div>
                 <p className="text-sm text-muted-foreground">
-                  Tip: Use the format @username ++ in your tweets to automatically track kudos
+                  Tip: Use the format @username ++ in your tweets to
+                  automatically track kudos
                 </p>
               </div>
             </CardContent>
@@ -490,13 +540,18 @@ export default function KudosApp() {
         <Card>
           <CardHeader>
             <CardTitle>Recent Kudos Activity</CardTitle>
-            <CardDescription>Latest kudos given across the network</CardDescription>
+            <CardDescription>
+              Latest kudos given across the network
+            </CardDescription>
           </CardHeader>
           <CardContent>
             {isLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
-                  <div key={i} className="animate-pulse flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div
+                    key={i}
+                    className="animate-pulse flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="h-10 w-10 rounded-full bg-muted" />
                       <div className="space-y-2">
@@ -515,17 +570,24 @@ export default function KudosApp() {
             ) : (
               <div className="space-y-4">
                 {recentKudos.map((kudos) => (
-                  <div key={kudos.id} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div
+                    key={kudos.id}
+                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                  >
                     <div className="flex items-center gap-4">
                       <Avatar>
-                        <AvatarFallback>{kudos.fromHandle[0].toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>
+                          {kudos.fromHandle[0].toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">
                           @{kudos.fromHandle} - @{kudos.toHandle}
                         </div>
                         {kudos.message && (
-                          <div className="text-sm text-muted-foreground">{kudos.message}</div>
+                          <div className="text-sm text-muted-foreground">
+                            {kudos.message}
+                          </div>
                         )}
                       </div>
                     </div>
@@ -538,7 +600,9 @@ export default function KudosApp() {
                       >
                         View Tweet
                       </a>
-                      <Badge variant="outline">{formatTimestamp(kudos.timestamp)}</Badge>
+                      <Badge variant="outline">
+                        {formatTimestamp(kudos.timestamp)}
+                      </Badge>
                     </div>
                   </div>
                 ))}
@@ -557,7 +621,10 @@ export default function KudosApp() {
             {isLoading ? (
               <div className="space-y-4">
                 {[1, 2, 3, 4, 5].map((i) => (
-                  <div key={i} className="animate-pulse flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div
+                    key={i}
+                    className="animate-pulse flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                  >
                     <div className="flex items-center gap-4">
                       <div className="h-8 w-8 bg-muted rounded" />
                       <div className="h-10 w-10 rounded-full bg-muted" />
@@ -572,16 +639,24 @@ export default function KudosApp() {
               </div>
             ) : leaderboard.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                No leaderboard data yet. Start giving kudos to populate the leaderboard!
+                No leaderboard data yet. Start giving kudos to populate the
+                leaderboard!
               </div>
             ) : (
               <div className="space-y-4">
                 {leaderboard.map((user, index) => (
-                  <div key={user.handle} className="flex items-center justify-between p-4 rounded-lg bg-muted/50">
+                  <div
+                    key={user.handle}
+                    className="flex items-center justify-between p-4 rounded-lg bg-muted/50"
+                  >
                     <div className="flex items-center gap-4">
-                      <div className="text-2xl font-bold text-muted-foreground">#{index + 1}</div>
+                      <div className="text-2xl font-bold text-muted-foreground">
+                        #{index + 1}
+                      </div>
                       <Avatar>
-                        <AvatarFallback>{user.handle[0].toUpperCase()}</AvatarFallback>
+                        <AvatarFallback>
+                          {user.handle[0].toUpperCase()}
+                        </AvatarFallback>
                       </Avatar>
                       <div>
                         <div className="font-medium">@{user.handle}</div>
@@ -605,7 +680,9 @@ export default function KudosApp() {
           <Card>
             <CardHeader>
               <CardTitle>Your Profile</CardTitle>
-              <CardDescription>Your kudos statistics and history</CardDescription>
+              <CardDescription>
+                Your kudos statistics and history
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
@@ -617,7 +694,9 @@ export default function KudosApp() {
                   </Avatar>
                   <div>
                     <div className="flex items-center gap-2">
-                      <h3 className="text-2xl font-bold">@{userProfile.handle}</h3>
+                      <h3 className="text-2xl font-bold">
+                        @{userProfile.handle}
+                      </h3>
                       {userData?.isPrivate && (
                         <Badge variant="secondary" className="gap-1">
                           <Lock className="h-3 w-3" />
@@ -637,7 +716,8 @@ export default function KudosApp() {
                 </div>
                 <div className="p-4 rounded-lg bg-muted/50">
                   <p className="text-sm text-muted-foreground">
-                    Keep giving kudos to climb the leaderboard! Your kudos are permanently recorded on the blockchain.
+                    Keep giving kudos to climb the leaderboard! Your kudos are
+                    permanently recorded on the blockchain.
                   </p>
                 </div>
               </div>

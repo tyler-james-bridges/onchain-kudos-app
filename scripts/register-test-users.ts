@@ -6,7 +6,8 @@ import * as dotenv from 'dotenv';
 
 dotenv.config({ path: '.env.local' });
 
-const CONTRACT_ADDRESS = process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
+const CONTRACT_ADDRESS = process.env
+  .NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`;
 const PRIVATE_KEY = process.env.PRIVATE_KEY as `0x${string}`;
 
 async function registerTestUsers() {
@@ -16,16 +17,16 @@ async function registerTestUsers() {
   }
 
   const account = privateKeyToAccount(PRIVATE_KEY);
-  
+
   const walletClient = createWalletClient({
     account,
     chain: abstractTestnet,
-    transport: http()
+    transport: http(),
   });
 
   const publicClient = createPublicClient({
     chain: abstractTestnet,
-    transport: http()
+    transport: http(),
   });
 
   const testUsers = [
@@ -33,7 +34,7 @@ async function registerTestUsers() {
     'bob_builder',
     'charlie_coder',
     'dana_designer',
-    'eve_engineer'
+    'eve_engineer',
   ];
 
   console.log('🚀 Registering test users...\n');
@@ -45,7 +46,7 @@ async function registerTestUsers() {
         address: CONTRACT_ADDRESS,
         abi: contractAbi.abi,
         functionName: 'handleToAddress',
-        args: [handle]
+        args: [handle],
       });
 
       if (handleAddress !== '0x0000000000000000000000000000000000000000') {
@@ -55,21 +56,22 @@ async function registerTestUsers() {
 
       // Register the user
       console.log(`📝 Registering ${handle}...`);
-      
+
       const { request } = await publicClient.simulateContract({
         address: CONTRACT_ADDRESS,
         abi: contractAbi.abi,
         functionName: 'registerUser',
         args: [handle],
-        account
+        account,
       });
 
       const hash = await walletClient.writeContract(request);
       await publicClient.waitForTransactionReceipt({ hash });
-      
+
       console.log(`✅ Successfully registered ${handle}`);
     } catch (error: unknown) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       if (errorMessage.includes('already registered')) {
         console.log(`${handle} is already registered`);
       } else {
@@ -79,7 +81,7 @@ async function registerTestUsers() {
   }
 
   console.log('\n✨ Test users ready! You can now give kudos to:');
-  testUsers.forEach(handle => {
+  testUsers.forEach((handle) => {
     console.log(`  - @${handle}`);
   });
 }

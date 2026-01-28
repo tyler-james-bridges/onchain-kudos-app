@@ -1,4 +1,4 @@
-import { abstract, abstractTestnet } from "viem/chains";
+import { abstract, abstractTestnet } from 'viem/chains';
 
 /**
  * Chain configuration for the Kudos application.
@@ -6,6 +6,5 @@ import { abstract, abstractTestnet } from "viem/chains";
  * - 'mainnet' -> Abstract mainnet
  * - anything else (or unset) -> Abstract testnet (default)
  */
-export const chain = process.env.NEXT_PUBLIC_CHAIN === 'mainnet'
-  ? abstract
-  : abstractTestnet;
+export const chain =
+  process.env.NEXT_PUBLIC_CHAIN === 'mainnet' ? abstract : abstractTestnet;

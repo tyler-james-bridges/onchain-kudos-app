@@ -9,7 +9,9 @@ import crypto from 'crypto';
 // SECURITY: Validate private key format at startup
 function validatePrivateKey(key: string | undefined): `0x${string}` {
   if (!key) {
-    throw new Error('WEBHOOK_PRIVATE_KEY environment variable is not configured');
+    throw new Error(
+      'WEBHOOK_PRIVATE_KEY environment variable is not configured'
+    );
   }
 
   // Must start with 0x
@@ -19,13 +21,17 @@ function validatePrivateKey(key: string | undefined): `0x${string}` {
 
   // Must be 66 characters (0x + 64 hex chars for 32 bytes)
   if (key.length !== 66) {
-    throw new Error('WEBHOOK_PRIVATE_KEY must be 32 bytes (66 characters including 0x prefix)');
+    throw new Error(
+      'WEBHOOK_PRIVATE_KEY must be 32 bytes (66 characters including 0x prefix)'
+    );
   }
 
   // Must be valid hexadecimal
   const hexPart = key.slice(2);
   if (!/^[0-9a-fA-F]+$/.test(hexPart)) {
-    throw new Error('WEBHOOK_PRIVATE_KEY contains invalid hexadecimal characters');
+    throw new Error(
+      'WEBHOOK_PRIVATE_KEY contains invalid hexadecimal characters'
+    );
   }
 
   return key as `0x${string}`;
@@ -80,14 +86,16 @@ interface TwitterWebhookPayload {
   }>;
 }
 
-function parseKudosFromTweet(text: string): { giver: string; recipient: string } | null {
+function parseKudosFromTweet(
+  text: string
+): { giver: string; recipient: string } | null {
   const kudosPattern = /@(\w+)\s*\+\+/;
   const match = text.match(kudosPattern);
 
   if (match && match[1]) {
     return {
       giver: '',
-      recipient: match[1]
+      recipient: match[1],
     };
   }
 
@@ -100,7 +108,9 @@ export async function POST(request: NextRequest) {
     const rawBody = await request.text();
 
     // SECURITY: Verify Twitter webhook signature
-    const twitterSignature = request.headers.get('X-Twitter-Webhooks-Signature');
+    const twitterSignature = request.headers.get(
+      'X-Twitter-Webhooks-Signature'
+    );
     const webhookSecret = process.env.TWITTER_WEBHOOK_SECRET;
 
     if (!webhookSecret) {
@@ -113,10 +123,7 @@ export async function POST(request: NextRequest) {
 
     if (!verifyTwitterSignature(rawBody, twitterSignature, webhookSecret)) {
       console.error('Invalid Twitter webhook signature');
-      return NextResponse.json(
-        { error: 'Invalid signature' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 });
     }
 
     // SECURITY: Validate private key format before any processing
@@ -124,7 +131,10 @@ export async function POST(request: NextRequest) {
     try {
       validatedPrivateKey = validatePrivateKey(process.env.WEBHOOK_PRIVATE_KEY);
     } catch (error) {
-      console.error('Private key validation failed:', error instanceof Error ? error.message : 'Unknown error');
+      console.error(
+        'Private key validation failed:',
+        error instanceof Error ? error.message : 'Unknown error'
+      );
       return NextResponse.json(
         { error: 'Webhook not properly configured' },
         { status: 500 }
@@ -133,8 +143,14 @@ export async function POST(request: NextRequest) {
 
     const payload: TwitterWebhookPayload = JSON.parse(rawBody);
 
-    if (!payload.tweet_create_events || payload.tweet_create_events.length === 0) {
-      return NextResponse.json({ status: 'ignored', reason: 'no tweet events' });
+    if (
+      !payload.tweet_create_events ||
+      payload.tweet_create_events.length === 0
+    ) {
+      return NextResponse.json({
+        status: 'ignored',
+        reason: 'no tweet events',
+      });
     }
 
     const processedTweets = [];
@@ -151,12 +167,12 @@ export async function POST(request: NextRequest) {
           const walletClient = createWalletClient({
             account,
             chain: chain,
-            transport: http()
+            transport: http(),
           });
 
           const publicClient = createPublicClient({
             chain: chain,
-            transport: http()
+            transport: http(),
           });
 
           // Check if giver is registered
@@ -164,7 +180,7 @@ export async function POST(request: NextRequest) {
             address: CONTRACT_ADDRESS,
             abi: KUDOS_CONTRACT_ABI,
             functionName: 'handleToAddress',
-            args: [kudos.giver]
+            args: [kudos.giver],
           });
 
           // Skip if giver is not registered (zero address)
@@ -174,20 +190,21 @@ export async function POST(request: NextRequest) {
               giver: kudos.giver,
               recipient: kudos.recipient,
               status: 'skipped',
-              reason: 'giver not registered'
+              reason: 'giver not registered',
             });
             continue;
           }
 
           const tweetUrl = `https://twitter.com/${kudos.giver}/status/${tweet.id_str}`;
 
-          const { request: contractRequest } = await publicClient.simulateContract({
-            address: CONTRACT_ADDRESS,
-            abi: KUDOS_CONTRACT_ABI,
-            functionName: 'giveKudos',
-            args: [kudos.recipient, tweetUrl],
-            account
-          });
+          const { request: contractRequest } =
+            await publicClient.simulateContract({
+              address: CONTRACT_ADDRESS,
+              abi: KUDOS_CONTRACT_ABI,
+              functionName: 'giveKudos',
+              args: [kudos.recipient, tweetUrl],
+              account,
+            });
 
           const hash = await walletClient.writeContract(contractRequest);
 
@@ -198,7 +215,7 @@ export async function POST(request: NextRequest) {
             giver: kudos.giver,
             recipient: kudos.recipient,
             transactionHash: hash,
-            status: 'success'
+            status: 'success',
           });
         } catch (error: unknown) {
           console.error('Error processing kudos:', error);
@@ -207,7 +224,7 @@ export async function POST(request: NextRequest) {
             giver: kudos.giver,
             recipient: kudos.recipient,
             error: error instanceof Error ? error.message : 'Unknown error',
-            status: 'failed'
+            status: 'failed',
           });
         }
       }
@@ -216,7 +233,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       status: 'processed',
       tweetsProcessed: processedTweets.length,
-      results: processedTweets
+      results: processedTweets,
     });
   } catch (error) {
     console.error('Webhook error:', error);
@@ -238,7 +255,7 @@ export async function GET(request: NextRequest) {
       .digest('base64');
 
     return NextResponse.json({
-      response_token: `sha256=${hmac}`
+      response_token: `sha256=${hmac}`,
     });
   }
 

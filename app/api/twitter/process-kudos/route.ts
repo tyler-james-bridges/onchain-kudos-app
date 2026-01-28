@@ -13,21 +13,15 @@ export async function POST(request: NextRequest) {
     }
 
     const twitterService = new TwitterService(process.env.TWITTER_BEARER_TOKEN);
-    
+
     const tweetId = twitterService.extractTweetIdFromUrl(tweetUrl);
     if (!tweetId) {
-      return NextResponse.json(
-        { error: 'Invalid tweet URL' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Invalid tweet URL' }, { status: 400 });
     }
 
     const tweetExists = await twitterService.verifyTweetExists(tweetId);
     if (!tweetExists) {
-      return NextResponse.json(
-        { error: 'Tweet not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Tweet not found' }, { status: 404 });
     }
 
     return NextResponse.json({
@@ -35,12 +29,15 @@ export async function POST(request: NextRequest) {
       tweetId,
       giver: giverHandle,
       recipient: recipientHandle,
-      verified: true
+      verified: true,
     });
   } catch (error: unknown) {
     console.error('Error processing kudos:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to process kudos' },
+      {
+        error:
+          error instanceof Error ? error.message : 'Failed to process kudos',
+      },
       { status: 500 }
     );
   }
@@ -53,10 +50,7 @@ export async function GET(request: NextRequest) {
     const sinceId = searchParams.get('since_id');
 
     if (!username) {
-      return NextResponse.json(
-        { error: 'Username required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Username required' }, { status: 400 });
     }
 
     const twitterService = new TwitterService(process.env.TWITTER_BEARER_TOKEN);
@@ -67,12 +61,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       tweets: kudosTweets,
-      count: kudosTweets.length
+      count: kudosTweets.length,
     });
   } catch (error: unknown) {
     console.error('Error fetching kudos tweets:', error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : 'Failed to fetch tweets' },
+      {
+        error:
+          error instanceof Error ? error.message : 'Failed to fetch tweets',
+      },
       { status: 500 }
     );
   }

@@ -1,45 +1,48 @@
-const hre = require("hardhat");
+const hre = require('hardhat');
 
 async function main() {
-  console.log("Deploying KudosTracker contract...");
-  
+  console.log('Deploying KudosTracker contract...');
+
   // Get the deployer account
   const [deployer] = await hre.ethers.getSigners();
-  console.log("Deploying with account:", deployer.address);
-  
+  console.log('Deploying with account:', deployer.address);
+
   // Check balance
   const balance = await hre.ethers.provider.getBalance(deployer.address);
-  console.log("Account balance:", hre.ethers.formatEther(balance), "ETH");
-  
+  console.log('Account balance:', hre.ethers.formatEther(balance), 'ETH');
+
   // Deploy the contract
-  const KudosTracker = await hre.ethers.getContractFactory("KudosTracker");
+  const KudosTracker = await hre.ethers.getContractFactory('KudosTracker');
   const kudosTracker = await KudosTracker.deploy();
-  
+
   // Wait for deployment
   await kudosTracker.waitForDeployment();
-  
+
   const contractAddress = await kudosTracker.getAddress();
-  console.log("KudosTracker deployed to:", contractAddress);
-  
+  console.log('KudosTracker deployed to:', contractAddress);
+
   // Save the contract address to a file
-  const fs = require("fs");
+  const fs = require('fs');
   const contractInfo = {
     address: contractAddress,
-    network: "abstractTestnet",
+    network: 'abstractTestnet',
     deployer: deployer.address,
-    deployedAt: new Date().toISOString()
+    deployedAt: new Date().toISOString(),
   };
-  
+
   fs.writeFileSync(
-    "./deployed-contract.json",
+    './deployed-contract.json',
     JSON.stringify(contractInfo, null, 2)
   );
-  
-  console.log("\n✅ Deployment complete!");
-  console.log("Contract address saved to deployed-contract.json");
-  console.log("\nNext steps:");
-  console.log("1. Update NEXT_PUBLIC_CONTRACT_ADDRESS in .env.local with:", contractAddress);
-  console.log("2. Verify the contract on Abstract explorer (optional)");
+
+  console.log('\n✅ Deployment complete!');
+  console.log('Contract address saved to deployed-contract.json');
+  console.log('\nNext steps:');
+  console.log(
+    '1. Update NEXT_PUBLIC_CONTRACT_ADDRESS in .env.local with:',
+    contractAddress
+  );
+  console.log('2. Verify the contract on Abstract explorer (optional)');
 }
 
 main()

@@ -1,7 +1,13 @@
 'use client';
 
 import { useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -17,27 +23,24 @@ import {
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
 import { useKudos, type UserData } from '@/lib/useKudos';
-import {
-  Shield,
-  Trash2,
-  Lock,
-  Unlock,
-  CheckCircle
-} from 'lucide-react';
+import { Shield, Trash2, Lock, Unlock, CheckCircle } from 'lucide-react';
 
 interface AccountSettingsProps {
   userData: UserData | null;
   onDataUpdate: () => void;
 }
 
-export function AccountSettings({ userData, onDataUpdate }: AccountSettingsProps) {
+export function AccountSettings({
+  userData,
+  onDataUpdate,
+}: AccountSettingsProps) {
   const {
     deleteAccountImmediately,
     setProfilePrivacy,
     isPending,
     isSuccess,
     error,
-    lastAction
+    lastAction,
   } = useKudos();
 
   useEffect(() => {
@@ -61,7 +64,9 @@ export function AccountSettings({ userData, onDataUpdate }: AccountSettingsProps
     try {
       await deleteAccountImmediately();
     } catch (err: unknown) {
-      toast.error(`Failed to delete account: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to delete account: ${err instanceof Error ? err.message : 'Unknown error'}`
+      );
     }
   };
 
@@ -69,7 +74,9 @@ export function AccountSettings({ userData, onDataUpdate }: AccountSettingsProps
     try {
       await setProfilePrivacy(!userData?.isPrivate);
     } catch (err: unknown) {
-      toast.error(`Failed to update privacy: ${err instanceof Error ? err.message : 'Unknown error'}`);
+      toast.error(
+        `Failed to update privacy: ${err instanceof Error ? err.message : 'Unknown error'}`
+      );
     }
   };
 
@@ -158,7 +165,10 @@ export function AccountSettings({ userData, onDataUpdate }: AccountSettingsProps
                 <AlertDialogTitle>Delete your account?</AlertDialogTitle>
                 <AlertDialogDescription asChild>
                   <div className="space-y-2">
-                    <p>This action cannot be undone. This will permanently delete your account.</p>
+                    <p>
+                      This action cannot be undone. This will permanently delete
+                      your account.
+                    </p>
                     <ul className="text-sm space-y-1 mt-2">
                       <li>Your handle will be permanently retired</li>
                       <li>You cannot re-register for 30 days</li>
