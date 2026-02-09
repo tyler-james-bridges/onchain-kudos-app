@@ -99,9 +99,7 @@ export function TwitterIntegration({
         <div className="p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
           <h3 className="font-semibold mb-2">How it works:</h3>
           <ol className="list-decimal list-inside space-y-1 text-sm">
-            <li>
-              Tweet &quot;@someone ++ great work!&quot; on X
-            </li>
+            <li>Tweet &quot;@someone ++ great work!&quot; on X</li>
             <li>Search for the handle below to find kudos tweets</li>
             <li>Process them to record the kudos permanently onchain</li>
           </ol>
